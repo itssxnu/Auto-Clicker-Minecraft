@@ -333,14 +333,12 @@ public class AutoClicker {
             boolean isBridging = isAttemptingToBridge && hasBlocks;
 
             // Block depletion safety:
-            // If they were auto-sneaking/bridging, but suddenly ran out of blocks AND are still trying to move,
-            // we force-sneak to prevent them from falling off!
+            // If they run out of blocks but are still trying to move backwards/sideways,
+            // we force-sneak at the edge to prevent them from falling off!
             boolean forceSafetySneak = activeProfile.isAutoBridge()
                 && !isEatingOrDrinking
-                && mc.player.isOnGround()
                 && !hasBlocks
-                && isMovingBackwards
-                && isAutoSneaking;
+                && isMovingBackwards;
 
             if (isBridging || forceSafetySneak) {
                 // Shrink the bounding box to check if the player's center position is off the edge (contract by 0.275 on each side)
