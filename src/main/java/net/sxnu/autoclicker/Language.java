@@ -31,7 +31,7 @@ public enum Language {
     }
 
     public MutableComponent getText() {
-        return this.text;
+        return Component.translatable(this.key);
     }
 
     public Component getText(Object... args) {

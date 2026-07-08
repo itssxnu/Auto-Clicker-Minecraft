@@ -7,6 +7,8 @@ import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
@@ -29,34 +31,156 @@ public class OptionsScreen extends Screen {
     protected void init() {
         int centerX = this.width / 2; // Screen center X
         int centerY = this.height / 2; // Screen center Y
+        
         int elementWidth = 100; // Element width for three-column layout
         int elementHeight = 20; // Standard element height
+        int verticalGap = 2;
+        int columnGap;
+
+        if (this.width < 380) {
+            columnGap = 4;
+            elementWidth = (this.width - 32) / 3;
+            elementWidth = Math.max(70, Math.min(100, elementWidth));
+        } else {
+            columnGap = 10;
+        }
+
+        if (this.height < 220) {
+            verticalGap = 1;
+            elementHeight = 18;
+        }
+
+        int totalMenuWidth = 3 * elementWidth + 2 * columnGap;
+        int startX = centerX - totalMenuWidth / 2;
+
+        int leftColX = startX;
+        int midColX = startX + elementWidth + columnGap;
+        int rightColX = startX + 2 * (elementWidth + columnGap);
+
+        int rowHeight = elementHeight + verticalGap;
+        int row0 = centerY - 4 * rowHeight - 6;
+        int row1 = row0 + rowHeight;
+        int row2 = row0 + 2 * rowHeight;
+        int row3 = row0 + 3 * rowHeight;
+        int row4 = row0 + 4 * rowHeight;
+        int row5 = row0 + 5 * rowHeight;
+        int row6 = row0 + 6 * rowHeight;
+        int labelY = row0 - 15;
 
         // Clear tooltips
         this.buttonTooltips.clear();
         this.sliderTooltips.clear();
 
-        // 3 Column Layout configuration
-        int leftColX = centerX - 160;
-        int midColX = centerX - 50;
-        int rightColX = centerX + 60;
-
         Config.ProfileConfig activeProfile = AutoClicker.getInstance().getConfig().getActiveProfileConfig();
         if (activeProfile == null) return;
 
+        // --- COLUMN LABELS ---
+        StringWidget leftColLabelWidget = new StringWidget(
+                leftColX, labelY, elementWidth, elementHeight,
+                Language.GUI_ATTACK.getText().copy().withColor(0xFFFFFF),
+                this.font
+        );
+        this.addRenderableWidget(leftColLabelWidget);
+
+        StringWidget midColLabelWidget = new StringWidget(
+                midColX, labelY, elementWidth, elementHeight,
+                Component.literal("Global & HUD").withColor(0xFFFFFF),
+                this.font
+        );
+        this.addRenderableWidget(midColLabelWidget);
+
+        StringWidget rightColLabelWidget = new StringWidget(
+                rightColX, labelY, elementWidth, elementHeight,
+                Language.GUI_USE.getText().copy().withColor(0xFFFFFF),
+                this.font
+        );
+        this.addRenderableWidget(rightColLabelWidget);
+
+        // --- SIDE GUIDES ---
+        int leftLimit = 15;
+        int rightLimit = leftColX - 15;
+        int availableWidth = rightLimit - leftLimit;
+
+        if (availableWidth >= 80) {
+            int guideY = centerY - 104;
+
+            StringWidget titleWidget = new StringWidget(
+                    leftLimit, guideY, availableWidth, 12,
+                    Component.literal("Mod Features Guide:").withColor(0xFFAA00),
+                    this.font
+            );
+            this.addRenderableWidget(titleWidget);
+            guideY += 14;
+
+            MultiLineTextWidget warningWidget = new MultiLineTextWidget(
+                    leftLimit, guideY,
+                    Component.literal("Make sure to toggle the autoclicker on (default: 'I') for these to work.").withColor(0xFF5555),
+                    this.font
+            );
+            warningWidget.setMaxWidth(availableWidth);
+            this.addRenderableWidget(warningWidget);
+            guideY += warningWidget.getHeight() + 6;
+
+            String detailsText = "• Auto-Bridge:\n" +
+                    "Sneaks on edges & places blocks. Automatically swaps matching blocks. Keeps you crouched if out of blocks.\n\n" +
+                    "• Auto-Eat:\n" +
+                    "Switches to food when hunger <= 12 and eats until full.\n\n" +
+                    "• Auto-Heal:\n" +
+                    "Uses Golden Apples or Healing Potions from hotbar when health <= 10.";
+            MultiLineTextWidget detailsWidget = new MultiLineTextWidget(
+                    leftLimit, guideY,
+                    Component.literal(detailsText).withColor(0xAAAAAA),
+                    this.font
+            );
+            detailsWidget.setMaxWidth(availableWidth);
+            this.addRenderableWidget(detailsWidget);
+        }
+
+        int rightColLeftLimit = rightColX + elementWidth + 15;
+        int rightColRightLimit = this.width - 15;
+        int rightColAvailableWidth = rightColRightLimit - rightColLeftLimit;
+
+        if (rightColAvailableWidth >= 80) {
+            int guideY = centerY - 104;
+
+            StringWidget rightTitleWidget = new StringWidget(
+                    rightColLeftLimit, guideY, rightColAvailableWidth, 12,
+                    Component.literal("Target Modes Guide:").withColor(0xFFAA00),
+                    this.font
+            );
+            this.addRenderableWidget(rightTitleWidget);
+            guideY += 14;
+
+            String targetText = "• All Mobs:\n" +
+                    "Attacks any target in sight.\n\n" +
+                    "• Hostiles Only:\n" +
+                    "Attacks monsters (Zombies, Skeletons, Creepers, etc.).\n\n" +
+                    "• Passives Only:\n" +
+                    "Attacks passive animals (Cows, Sheep, Squids, etc.).\n\n" +
+                    "• Hostiles & Passives:\n" +
+                    "Attacks monsters and animals, but excludes villagers, golems, pets, and players.";
+            MultiLineTextWidget rightDetailsWidget = new MultiLineTextWidget(
+                    rightColLeftLimit, guideY,
+                    Component.literal(targetText).withColor(0xAAAAAA),
+                    this.font
+            );
+            rightDetailsWidget.setMaxWidth(rightColAvailableWidth);
+            this.addRenderableWidget(rightDetailsWidget);
+        }
+
         // --- LEFT COLUMN (Attack / Left Click) ---
-        addCenteredButton(leftColX, centerY - 94, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row0, elementWidth, elementHeight,
                 Language.GUI_ACTIVE.getText(AutoClicker.leftHolding.isActive()),
                 button -> toggleActive(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.active");
 
-        addCenteredButton(leftColX, centerY - 72, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row1, elementWidth, elementHeight,
                 Language.GUI_SPAMMING.getText(AutoClicker.leftHolding.isSpamming()),
                 button -> toggleSpamming(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.spamming");
 
         OptionsSliderWidget leftHoldingSpamSpeedSlider = new OptionsSliderWidget(
-                leftColX, centerY - 50, elementWidth, elementHeight,
+                leftColX, row2, elementWidth, elementHeight,
                 Component.nullToEmpty("Left Spam Speed"),
                 AutoClicker.leftHolding.getSpeed() / 1200.0,
                 value -> {
@@ -66,61 +190,61 @@ public class OptionsScreen extends Screen {
         );
         this.addRenderableWidget(leftHoldingSpamSpeedSlider);
 
-        addCenteredButton(leftColX, centerY - 28, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row3, elementWidth, elementHeight,
                 Language.GUI_RESPECT_COOLDOWN.getText(AutoClicker.leftHolding.isRespectCooldown()),
                 button -> toggleCooldown(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.cooldown");
 
-        addCenteredButton(leftColX, centerY - 6, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row4, elementWidth, elementHeight,
                 Language.GUI_RESPECT_SHIELD.getText(AutoClicker.leftHolding.isRespectShield()),
                 button -> toggleShield(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.shield");
 
-        addCenteredButton(leftColX, centerY + 16, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row5, elementWidth, elementHeight,
                 Language.GUI_MOB_MODE.getText(AutoClicker.leftHolding.isMobMode()),
                 button -> toggleMobMode(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.mob-mode");
 
-        addCenteredButton(leftColX, centerY + 38, elementWidth, elementHeight,
+        addCenteredButton(leftColX, row6, elementWidth, elementHeight,
                 Language.GUI_TARGET_MODE.getText(Component.translatable(AutoClicker.leftHolding.getTargetMode().getTranslationKey())),
                 button -> toggleTargetMode(button, AutoClicker.leftHolding),
                 "autoclicker-fabric.gui.help.target-mode");
 
 
         // --- MIDDLE COLUMN (Global / HUD Settings) ---
-        addCenteredButton(midColX, centerY - 94, elementWidth, elementHeight,
+        addCenteredButton(midColX, row0, elementWidth, elementHeight,
                 Language.GUI_PROFILE.getText(AutoClicker.getInstance().getConfig().getActiveProfile()),
                 button -> toggleProfile(button),
                 "autoclicker-fabric.gui.help.profile");
 
-        addCenteredButton(midColX, centerY - 72, elementWidth, elementHeight,
+        addCenteredButton(midColX, row1, elementWidth, elementHeight,
                 Language.GUI_AUTO_EAT.getText(activeProfile.isAutoEat()),
                 button -> toggleAutoEat(button, activeProfile),
                 "autoclicker-fabric.gui.help.auto-eat");
 
-        addCenteredButton(midColX, centerY - 50, elementWidth, elementHeight,
+        addCenteredButton(midColX, row2, elementWidth, elementHeight,
                 Language.GUI_AUTO_HEAL.getText(activeProfile.isAutoHeal()),
                 button -> toggleAutoHeal(button, activeProfile),
                 "autoclicker-fabric.gui.help.auto-heal");
 
-        addCenteredButton(midColX, centerY - 28, elementWidth, elementHeight,
+        addCenteredButton(midColX, row3, elementWidth, elementHeight,
                 Language.GUI_HUD_ENABLED.getText(AutoClicker.hudConfig.isEnabled()),
                 button -> toggleHudEnabled(button),
                 "autoclicker-fabric.gui.help.hud-enabled");
 
         // --- RIGHT COLUMN (Use / Right Click Settings) ---
-        addCenteredButton(rightColX, centerY - 94, elementWidth, elementHeight,
+        addCenteredButton(rightColX, row0, elementWidth, elementHeight,
                 Language.GUI_ACTIVE.getText(AutoClicker.rightHolding.isActive()),
                 button -> toggleActive(button, AutoClicker.rightHolding),
                 "autoclicker-fabric.gui.help.active");
 
-        addCenteredButton(rightColX, centerY - 72, elementWidth, elementHeight,
+        addCenteredButton(rightColX, row1, elementWidth, elementHeight,
                 Language.GUI_SPAMMING.getText(AutoClicker.rightHolding.isSpamming()),
                 button -> toggleSpamming(button, AutoClicker.rightHolding),
                 "autoclicker-fabric.gui.help.spamming");
 
         OptionsSliderWidget rightHoldingSpamSpeedSlider = new OptionsSliderWidget(
-                rightColX, centerY - 50, elementWidth, elementHeight,
+                rightColX, row2, elementWidth, elementHeight,
                 Component.nullToEmpty("Right Spam Speed"),
                 AutoClicker.rightHolding.getSpeed() / 1200.0,
                 value -> {
@@ -130,7 +254,7 @@ public class OptionsScreen extends Screen {
         );
         this.addRenderableWidget(rightHoldingSpamSpeedSlider);
 
-        addCenteredButton(rightColX, centerY - 28, elementWidth, elementHeight,
+        addCenteredButton(rightColX, row3, elementWidth, elementHeight,
                 Language.GUI_AUTO_BRIDGE.getText(activeProfile.isAutoBridge()),
                 button -> toggleAutoBridge(button, activeProfile),
                 "autoclicker-fabric.gui.help.auto-bridge");
@@ -226,155 +350,7 @@ public class OptionsScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
-        this.extractBackground(context, mouseX, mouseY, delta);
         super.extractRenderState(context, mouseX, mouseY, delta);
-
-        int centerX = this.width / 2;
-        int labelY = 10;
-        int elementWidth = 100;
-
-        int leftColX = centerX - 160;
-        int midColX = centerX - 50;
-        int rightColX = centerX + 60;
-
-        // Left Column Label
-        Component leftLabel = Language.GUI_ATTACK.getText();
-        context.text(
-                this.font, leftLabel.getVisualOrderText(),
-                leftColX + elementWidth / 2 - this.font.width(leftLabel) / 2,
-                labelY,
-                0xFFFFFF,
-                true
-        );
-
-        // Middle Column Label
-        Component midLabel = Component.nullToEmpty("Global & HUD");
-        context.text(
-                this.font, midLabel.getVisualOrderText(),
-                midColX + elementWidth / 2 - this.font.width(midLabel) / 2,
-                labelY,
-                0xFFFFFF,
-                true
-        );
-
-        // Right Column Label
-        Component rightLabel = Language.GUI_USE.getText();
-        context.text(
-                this.font, rightLabel.getVisualOrderText(),
-                rightColX + elementWidth / 2 - this.font.width(rightLabel) / 2,
-                labelY,
-                0xFFFFFF,
-                true
-        );
-
-        // Render features and target filter guide on the left side with dynamic wrapping to prevent overlap
-        int leftLimit = 15;
-        int rightLimit = centerX - 175; // Padding before the left column
-        int availableWidth = rightLimit - leftLimit;
-
-        if (availableWidth >= 80) { // Only render if there is sufficient horizontal space
-            int centerY = this.height / 2;
-            int guideY = centerY - 104; // Start slightly higher
-            int color = 0xAAAAAA; // Light gray for guide text
-            int titleColor = 0xFFAA00; // Gold for headers
-            int bulletColor = 0xFFFFFF; // White for bullets
-
-            context.text(this.font, Component.nullToEmpty("Mod Features Guide:"), leftLimit, guideY, titleColor, true);
-            guideY += 12;
-
-            String warningText = "Make sure to toggle the autoclicker on (default: 'I') for these to work.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(warningText), availableWidth)) {
-                context.text(this.font, line, leftLimit, guideY, 0xFF5555, true);
-                guideY += 9;
-            }
-            guideY += 4;
-
-            context.text(this.font, Component.nullToEmpty("• Auto-Bridge:"), leftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String bridgeText = "Sneaks on edges & places blocks. Automatically swaps matching blocks. Keeps you crouched if out of blocks.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(bridgeText), availableWidth - 6)) {
-                context.text(this.font, line, leftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Auto-Eat:"), leftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String eatText = "Switches to hotbar food when hunger is 4 bars down (<= 12) and eats until full.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(eatText), availableWidth - 6)) {
-                context.text(this.font, line, leftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Auto-Heal:"), leftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String healText = "Uses Golden Apples or Healing Potions from hotbar when health <= 10.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(healText), availableWidth - 6)) {
-                context.text(this.font, line, leftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Target Mode:"), leftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String targetText = "Filters entity attacks. Villagers, golems, players, and pets are protected.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(targetText), availableWidth - 6)) {
-                context.text(this.font, line, leftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-        }
-
-        // Render target modes guide on the right side with dynamic wrapping to prevent overlap
-        int rightColLeftLimit = centerX + 175;
-        int rightColRightLimit = this.width - 15;
-        int rightColAvailableWidth = rightColRightLimit - rightColLeftLimit;
-
-        if (rightColAvailableWidth >= 80) { // Only render if there is sufficient horizontal space
-            int centerY = this.height / 2;
-            int guideY = centerY - 104; // Start at the same height as the left column
-            int color = 0xAAAAAA; // Light gray for guide text
-            int titleColor = 0xFFAA00; // Gold for headers
-            int bulletColor = 0xFFFFFF; // White for bullets
-
-            context.text(this.font, Component.nullToEmpty("Target Modes Guide:"), rightColLeftLimit, guideY, titleColor, true);
-            guideY += 12;
-
-            context.text(this.font, Component.nullToEmpty("• All Mobs:"), rightColLeftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String allMobsText = "Attacks any target in your direct line of sight.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(allMobsText), rightColAvailableWidth - 6)) {
-                context.text(this.font, line, rightColLeftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Hostiles Only:"), rightColLeftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String hostilesText = "Attacks monsters (Zombies, Skeletons, Creepers, Phantoms, Slimes).";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(hostilesText), rightColAvailableWidth - 6)) {
-                context.text(this.font, line, rightColLeftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Passives Only:"), rightColLeftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String passivesText = "Attacks passive entities (Cows, Sheep, Squids, Fish, Bats).";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(passivesText), rightColAvailableWidth - 6)) {
-                context.text(this.font, line, rightColLeftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-            guideY += 2;
-
-            context.text(this.font, Component.nullToEmpty("• Hostiles & Passives:"), rightColLeftLimit, guideY, bulletColor, true);
-            guideY += 9;
-            String hostilesPassivesText = "Attacks monsters and animals, but excludes villagers, golems, pets, and players.";
-            for (net.minecraft.util.FormattedCharSequence line : this.font.split(FormattedText.of(hostilesPassivesText), rightColAvailableWidth - 6)) {
-                context.text(this.font, line, rightColLeftLimit + 6, guideY, color, true);
-                guideY += 9;
-            }
-        }
 
         // Render tooltips for buttons
         for (Button button : buttonTooltips.keySet()) {
