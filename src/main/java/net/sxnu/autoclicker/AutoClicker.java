@@ -9,6 +9,10 @@ import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ShieldItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -39,11 +43,52 @@ public class AutoClicker {
     public static Config.HudConfig hudConfig;
     private static AutoClicker INSTANCE;
     private boolean isActive = false;
-    private Config config = new Config(
-            new Config.LeftMouseConfig(false, false, 0, false, false, false),
+
+    // Auto-bridging states
+    private static boolean isAutoSneaking = false;
+    private static boolean isAutoRightClicking = false;
+    private static net.minecraft.item.Item lastBridgingBlock = null;
+
+    // Auto-eat/heal states
+    private static int originalSlot = -1;
+    private static int eatingTicks = 0;
+    private static boolean isEatingOrDrinking = false;
+
+    private static Config createDefaultConfig() {
+        java.util.Map<String, Config.ProfileConfig> profiles = new java.util.HashMap<>();
+        
+        // Default profile
+        profiles.put("Default", new Config.ProfileConfig(
+            new Config.LeftMouseConfig(false, false, 0, false, false, false, TargetMode.ALL),
             new Config.RightMouseConfig(false, false, 0),
-            new Config.HudConfig(true)
-    );
+            false, false, false
+        ));
+        
+        // PVP profile
+        profiles.put("PVP Mode", new Config.ProfileConfig(
+            new Config.LeftMouseConfig(false, false, 0, true, true, false, TargetMode.ALL),
+            new Config.RightMouseConfig(false, false, 0),
+            false, false, false
+        ));
+        
+        // AFK Mob Farm profile
+        profiles.put("AFK Mob Farm", new Config.ProfileConfig(
+            new Config.LeftMouseConfig(true, false, 0, true, false, true, TargetMode.HOSTILE),
+            new Config.RightMouseConfig(false, false, 0),
+            false, false, false
+        ));
+
+        // Block Bridging profile
+        profiles.put("Block Bridging", new Config.ProfileConfig(
+            new Config.LeftMouseConfig(false, false, 0, false, false, false, TargetMode.ALL),
+            new Config.RightMouseConfig(true, true, 1),
+            true, false, false
+        ));
+
+        return new Config(profiles, new Config.HudConfig(true), "Default");
+    }
+
+    private Config config = createDefaultConfig();
 
     public AutoClicker() {
         INSTANCE = this;
@@ -74,6 +119,21 @@ public class AutoClicker {
                 json.close();
                 if (config != null && config.getHudConfig() != null) {
                     this.config = config;
+                    // Migrate legacy config if profiles is missing
+                    if (this.config.getProfiles() == null || this.config.getProfiles().isEmpty()) {
+                        Config oldConfig = this.config;
+                        this.config = createDefaultConfig();
+                        Config.ProfileConfig defaultProf = this.config.getProfiles().get("Default");
+                        if (defaultProf != null) {
+                            if (oldConfig.leftClick != null) {
+                                defaultProf.setLeftClick(oldConfig.leftClick);
+                            }
+                            if (oldConfig.rightClick != null) {
+                                defaultProf.setRightClick(oldConfig.rightClick);
+                            }
+                        }
+                        this.saveConfig();
+                    }
                 }
             } catch (Exception e){
                 e.printStackTrace();
@@ -99,61 +159,303 @@ public class AutoClicker {
     }
 
     public void RenderGameOverlayEvent(DrawContext context, RenderTickCounter delta) {
-
-        if ((!leftHolding.isActive() && !rightHolding.isActive()) || !this.isActive || !config.getHudConfig().isEnabled()) {
+        if (!this.isActive || !config.getHudConfig().isEnabled()) {
             return;
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
+        int screenWidth = client.getWindow().getScaledWidth();
+        int screenHeight = client.getWindow().getScaledHeight();
+        int color = 0xFFFFFF; // White color
+
+        // Collect lines to render dynamically
+        java.util.List<Text> lines = new java.util.ArrayList<>();
+        lines.add(Text.of("Auto Clicker: Active (" + config.getActiveProfile() + ")"));
 
         if (leftHolding.isActive()) {
-            Text text = Language.HUD_HOLDING.getText(I18n.translate(leftHolding.getKey().getTranslationKey()));
-            int y = getHudY() + (15 * 0);
-            int x = getHudX(text);
-            context.drawTextWithShadow(client.textRenderer, text.asOrderedText(), x, y, 0xffffff);
+            String mode = leftHolding.isSpamming() ? "Spam" : (leftHolding.isRespectCooldown() ? "Cooldown" : "Hold");
+            lines.add(Text.of("• Left Click: " + mode));
         }
-
         if (rightHolding.isActive()) {
-            Text text = Language.HUD_HOLDING.getText(I18n.translate(rightHolding.getKey().getTranslationKey()));
-            int y = getHudY() + (15 * 1);
-            int x = getHudX(text);
-            context.drawTextWithShadow(client.textRenderer, text.asOrderedText(), x, y, 0xffffff);
+            String mode = rightHolding.isSpamming() ? "Spam" : "Hold";
+            lines.add(Text.of("• Right Click: " + mode));
+        }
+        Config.ProfileConfig activeProfile = config.getActiveProfileConfig();
+        if (activeProfile != null) {
+            if (activeProfile.isAutoBridge()) {
+                lines.add(Text.of("• Auto-Bridge: Active"));
+            }
+            if (activeProfile.isAutoEat()) {
+                lines.add(Text.of("• Auto-Eat: Active"));
+            }
+            if (activeProfile.isAutoHeal()) {
+                lines.add(Text.of("• Auto-Heal: Active"));
+            }
         }
 
+        int startY = screenHeight - 70;
+        int spacing = 12;
+
+        for (int i = 0; i < lines.size(); i++) {
+            Text text = lines.get(i);
+            int textWidth = client.textRenderer.getWidth(text);
+            int x = (screenWidth - textWidth) / 2;
+            int y = startY + (i * spacing);
+            context.drawTextWithShadow(client.textRenderer, text.asOrderedText(), x, y, color);
+        }
     }
 
-    public int getHudX(Text text) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        int screenWidth = client.getWindow().getScaledWidth();
-        int textWidth = client.textRenderer.getWidth(text);
-        return (screenWidth - textWidth) / 2; // Center the text horizontally
+    public Config getConfig() {
+        return this.config;
     }
-
-    public int getHudY() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        int screenHeight = client.getWindow().getScaledHeight();
-        return screenHeight - 70; // Position it 40 pixels above the bottom
-    }
-
-
 
     public void clientTickEvent(MinecraftClient mc) {
         if (mc.player == null || mc.world == null) {
             return;
         }
-        if(!mc.player.isAlive()) this.isActive = false;
+        if (!mc.player.isAlive()) {
+            this.isActive = false;
+            if (isAutoSneaking) {
+                mc.options.sneakKey.setPressed(false);
+                isAutoSneaking = false;
+            }
+            if (isAutoRightClicking) {
+                mc.options.useKey.setPressed(false);
+                isAutoRightClicking = false;
+            }
+            isEatingOrDrinking = false;
+            originalSlot = -1;
+            lastBridgingBlock = null;
+        }
 
-        if (this.isActive) {
-            if (leftHolding.isActive()) {
-                this.handleActiveHolding(mc, leftHolding);
+        // Get the active profile config
+        Config.ProfileConfig activeProfile = config.getActiveProfileConfig();
+
+        if (this.isActive && activeProfile != null) {
+            // Auto-Heal check (highest priority)
+            if (activeProfile.isAutoHeal() && !isEatingOrDrinking && mc.player.getHealth() <= 10.0f) {
+                int healSlot = findHealSlot(mc.player);
+                if (healSlot != -1) {
+                    originalSlot = mc.player.getInventory().selectedSlot;
+                    mc.player.getInventory().selectedSlot = healSlot;
+                    mc.options.useKey.setPressed(true);
+                    isEatingOrDrinking = true;
+                    eatingTicks = 0;
+                }
             }
 
-            if (rightHolding.isActive()) {
-                this.handleActiveHolding(mc, rightHolding);
+            // Auto-Eat check (lower priority)
+            if (activeProfile.isAutoEat() && !isEatingOrDrinking && mc.player.getHungerManager().getFoodLevel() <= 12) {
+                int foodSlot = findFoodSlot(mc.player);
+                if (foodSlot != -1) {
+                    originalSlot = mc.player.getInventory().selectedSlot;
+                    mc.player.getInventory().selectedSlot = foodSlot;
+                    mc.options.useKey.setPressed(true);
+                    isEatingOrDrinking = true;
+                    eatingTicks = 0;
+                }
             }
+
+            // If currently eating or drinking
+            if (isEatingOrDrinking) {
+                eatingTicks++;
+                // Check if current item finished consuming (isUsingItem goes false) or safety timeout
+                if (eatingTicks > 5 && (!mc.player.isUsingItem() || eatingTicks > 45)) {
+                    // Check if the item in hand is a healing item
+                    boolean isHealItem = false;
+                    ItemStack activeStack = mc.player.getInventory().getStack(mc.player.getInventory().selectedSlot);
+                    if (!activeStack.isEmpty()) {
+                        if (activeStack.isOf(Items.GOLDEN_APPLE) || activeStack.isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
+                            isHealItem = true;
+                        } else if (activeStack.getItem() instanceof net.minecraft.item.PotionItem) {
+                            isHealItem = true;
+                        }
+                    }
+
+                    // If it was food and hunger is still not full, continue eating
+                    if (!isHealItem && mc.player.getHungerManager().getFoodLevel() < 20) {
+                        int nextFoodSlot = findFoodSlot(mc.player);
+                        if (nextFoodSlot != -1) {
+                            mc.player.getInventory().selectedSlot = nextFoodSlot;
+                            mc.options.useKey.setPressed(true);
+                            eatingTicks = 0; // Reset ticks to wait for next item consumption
+                        } else {
+                            // Out of food, stop
+                            mc.options.useKey.setPressed(false);
+                            if (originalSlot != -1) {
+                                mc.player.getInventory().selectedSlot = originalSlot;
+                            }
+                            isEatingOrDrinking = false;
+                            originalSlot = -1;
+                            eatingTicks = 0;
+                        }
+                    } else {
+                        // Healing item finished or hunger is full, stop eating
+                        mc.options.useKey.setPressed(false);
+                        if (originalSlot != -1) {
+                            mc.player.getInventory().selectedSlot = originalSlot;
+                        }
+                        isEatingOrDrinking = false;
+                        originalSlot = -1;
+                        eatingTicks = 0;
+                    }
+                }
+            }
+
+            // Auto-Bridge (SafeWalk/Eagle) checking
+            boolean holdsBlockInMain = mc.player.getMainHandStack().getItem() instanceof net.minecraft.item.BlockItem;
+            boolean holdsBlockInOff = mc.player.getOffHandStack().getItem() instanceof net.minecraft.item.BlockItem;
+
+            // Record last block type used
+            if (holdsBlockInMain) {
+                lastBridgingBlock = mc.player.getMainHandStack().getItem();
+            } else if (holdsBlockInOff) {
+                lastBridgingBlock = mc.player.getOffHandStack().getItem();
+            }
+
+            boolean isMovingBackwards = mc.options.backKey.isPressed() || mc.options.leftKey.isPressed() || mc.options.rightKey.isPressed();
+
+            // Only switch slots if the user is actively attempting to bridge (moving backwards/sideways on ground)
+            boolean isAttemptingToBridge = activeProfile.isAutoBridge()
+                && !isEatingOrDrinking
+                && mc.player.isOnGround()
+                && isMovingBackwards;
+
+            if (isAttemptingToBridge && mc.player.getMainHandStack().isEmpty() && lastBridgingBlock != null) {
+                int slot = findSameBlockSlot(mc.player, lastBridgingBlock);
+                if (slot != -1) {
+                    mc.player.getInventory().selectedSlot = slot;
+                    holdsBlockInMain = true; // Switch successful!
+                }
+            }
+
+            boolean hasBlocks = holdsBlockInMain || holdsBlockInOff;
+            boolean isBridging = isAttemptingToBridge && hasBlocks;
+
+            // Block depletion safety:
+            // If they were auto-sneaking/bridging, but suddenly ran out of blocks AND are still trying to move,
+            // we force-sneak to prevent them from falling off!
+            boolean forceSafetySneak = activeProfile.isAutoBridge()
+                && !isEatingOrDrinking
+                && mc.player.isOnGround()
+                && !hasBlocks
+                && isMovingBackwards
+                && isAutoSneaking;
+
+            if (isBridging || forceSafetySneak) {
+                // Shrink the bounding box to check if the player's center position is off the edge (contract by 0.275 on each side)
+                boolean onEdge = !mc.world.getBlockCollisions(mc.player, mc.player.getBoundingBox().offset(0, -0.1, 0).contract(0.275, 0, 0.275)).iterator().hasNext();
+                if (onEdge) {
+                    mc.options.sneakKey.setPressed(true);
+                    isAutoSneaking = true;
+
+                    // Trigger block placement (right-click) if they have blocks
+                    if (hasBlocks) {
+                        mc.options.useKey.setPressed(true);
+                        isAutoRightClicking = true;
+                    } else {
+                        if (isAutoRightClicking) {
+                            mc.options.useKey.setPressed(false);
+                            isAutoRightClicking = false;
+                        }
+                    }
+                } else {
+                    if (isAutoSneaking) {
+                        mc.options.sneakKey.setPressed(false);
+                        isAutoSneaking = false;
+                    }
+                    if (isAutoRightClicking) {
+                        mc.options.useKey.setPressed(false);
+                        isAutoRightClicking = false;
+                    }
+                }
+            } else {
+                if (isAutoSneaking) {
+                    mc.options.sneakKey.setPressed(false);
+                    isAutoSneaking = false;
+                }
+                if (isAutoRightClicking) {
+                    mc.options.useKey.setPressed(false);
+                    isAutoRightClicking = false;
+                }
+            }
+
+            // Only run left click/right click handles if not actively auto-eating/drinking and not auto-bridging placement
+            if (!isEatingOrDrinking) {
+                if (leftHolding.isActive()) {
+                    this.handleActiveHolding(mc, leftHolding);
+                }
+
+                if (rightHolding.isActive() && !isAutoRightClicking) {
+                    this.handleActiveHolding(mc, rightHolding);
+                }
+            }
+        } else {
+            // Reset auto states when not active
+            if (isAutoSneaking) {
+                mc.options.sneakKey.setPressed(false);
+                isAutoSneaking = false;
+            }
+            if (isAutoRightClicking) {
+                mc.options.useKey.setPressed(false);
+                isAutoRightClicking = false;
+            }
+            if (isEatingOrDrinking) {
+                mc.options.useKey.setPressed(false);
+                if (originalSlot != -1) {
+                    mc.player.getInventory().selectedSlot = originalSlot;
+                }
+                isEatingOrDrinking = false;
+                originalSlot = -1;
+            }
+            lastBridgingBlock = null;
         }
 
         this.keyInputEvent(mc);
+    }
+
+    private int findSameBlockSlot(ClientPlayerEntity player, net.minecraft.item.Item blockItem) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (!stack.isEmpty() && stack.getItem() == blockItem) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findFoodSlot(ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (!stack.isEmpty() && stack.contains(DataComponentTypes.FOOD)) {
+                // Exclude precious foods (Golden Apples / Enchanted Golden Apples) from normal eating
+                if (!stack.isOf(Items.GOLDEN_APPLE) && !stack.isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private int findHealSlot(ClientPlayerEntity player) {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (!stack.isEmpty()) {
+                if (stack.isOf(Items.GOLDEN_APPLE) || stack.isOf(Items.ENCHANTED_GOLDEN_APPLE)) {
+                    return i;
+                }
+                if (stack.getItem() instanceof net.minecraft.item.PotionItem) {
+                    PotionContentsComponent potionContents = stack.get(DataComponentTypes.POTION_CONTENTS);
+                    if (potionContents != null && potionContents.potion().isPresent()) {
+                        String path = potionContents.potion().get().getKey().map(key -> key.getValue().getPath()).orElse("");
+                        if (path.contains("healing") || path.contains("regeneration")) {
+                            return i;
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
     }
 
     private void handleActiveHolding(MinecraftClient mc, Holding key) {
@@ -219,9 +521,16 @@ public class AutoClicker {
         }
 
         HitResult rayTrace = mc.crosshairTarget;
-        if (rayTrace instanceof EntityHitResult && mc.interactionManager != null) {
-            if(!(config.getLeftClick().isRespectShield() && isShielding(mc.player))) {
-                mc.interactionManager.attackEntity(mc.player, ((EntityHitResult) rayTrace).getEntity());
+        if (rayTrace instanceof EntityHitResult entityHit && mc.interactionManager != null) {
+            if (!(config.getLeftClick().isRespectShield() && isShielding(mc.player))) {
+                if (entityHit.getEntity() instanceof LivingEntity livingEntity) {
+                    if (!leftHolding.getTargetMode().isValidTarget(livingEntity)) {
+                        return;
+                    }
+                } else if (leftHolding.isMobMode()) {
+                    return;
+                }
+                mc.interactionManager.attackEntity(mc.player, entityHit.getEntity());
                 if (mc.player != null) {
                     mc.player.swingHand(Hand.MAIN_HAND);
                 }
@@ -238,7 +547,7 @@ public class AutoClicker {
 
     private boolean isPlayerLookingAtMob(MinecraftClient mc) {
         HitResult rayTrace = mc.crosshairTarget;
-        return rayTrace instanceof EntityHitResult && ((EntityHitResult) rayTrace).getEntity() instanceof LivingEntity livingEntity && livingEntity.isAlive() && livingEntity.isAttackable();
+        return rayTrace instanceof EntityHitResult entityHit && entityHit.getEntity() instanceof LivingEntity livingEntity && livingEntity.isAlive() && livingEntity.isAttackable() && leftHolding.getTargetMode().isValidTarget(livingEntity);
     }
 
     private void keyInputEvent(MinecraftClient mc) {

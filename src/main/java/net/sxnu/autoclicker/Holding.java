@@ -94,5 +94,13 @@ public class Holding {
         public void setMobMode(boolean mobMode) {
             ((Config.LeftMouseConfig) this.config).setMobMode(mobMode);
         }
+
+        public TargetMode getTargetMode() {
+            return ((Config.LeftMouseConfig) this.config).getTargetMode();
+        }
+
+        public void setTargetMode(TargetMode targetMode) {
+            ((Config.LeftMouseConfig) this.config).setTargetMode(targetMode);
+        }
     }
 }
