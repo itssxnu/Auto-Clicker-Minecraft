@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/BETTER-AUTO-CLICKER-7-8-2026.png" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
+  <a href="https://modrinth.com/mod/auto-clicker-by-its_sxnu">
+    <img src="https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/BETTER-AUTO-CLICKER-7-8-2026.png" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
+  </a>
 </p>
 
 <h1 align="center">🎮 Better Auto Clicker</h1>
