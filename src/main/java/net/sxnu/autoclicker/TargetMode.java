@@ -1,14 +1,14 @@
 package net.sxnu.autoclicker;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.Monster;
-import net.minecraft.entity.mob.AmbientEntity;
-import net.minecraft.entity.mob.WaterCreatureEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.GolemEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.ambient.AmbientCreature;
+import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.fish.WaterAnimal;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.player.Player;
 
 public enum TargetMode {
     ALL("all"),
@@ -32,22 +32,22 @@ public enum TargetMode {
         }
 
         // Tameable animals that are tamed should be excluded
-        if (entity instanceof TameableEntity tameable && tameable.isTamed()) {
+        if (entity instanceof TamableAnimal tameable && tameable.isTame()) {
             return false;
         }
 
         // Exclude villagers and golems
-        if (entity instanceof VillagerEntity || entity instanceof GolemEntity) {
+        if (entity instanceof Villager || entity instanceof AbstractGolem) {
             return false;
         }
 
         // Exclude other players
-        if (entity instanceof PlayerEntity) {
+        if (entity instanceof Player) {
             return false;
         }
 
-        boolean isHostile = entity instanceof Monster;
-        boolean isPassive = entity instanceof AnimalEntity || entity instanceof WaterCreatureEntity || entity instanceof AmbientEntity;
+        boolean isHostile = entity instanceof Enemy;
+        boolean isPassive = entity instanceof Animal || entity instanceof WaterAnimal || entity instanceof AmbientCreature;
 
         return switch (this) {
             case HOSTILE -> isHostile;

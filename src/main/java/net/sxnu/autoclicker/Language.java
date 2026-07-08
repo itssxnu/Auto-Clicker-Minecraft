@@ -1,7 +1,7 @@
 package net.sxnu.autoclicker;
 
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 public enum Language {
     HUD_HOLDING("autoclicker-fabric.hud.holding"),
@@ -23,18 +23,18 @@ public enum Language {
     GUI_AUTO_HEAL("autoclicker-fabric.gui.auto-heal");
 
     private final String key;
-    MutableText text;
+    MutableComponent text;
 
     Language(String langKey) {
-        this.text = Text.translatable(langKey);
+        this.text = Component.translatable(langKey);
         this.key = langKey;
     }
 
-    public MutableText getText() {
+    public MutableComponent getText() {
         return this.text;
     }
 
-    public Text getText(Object... args) {
-        return Text.translatable(this.key, args);
+    public Component getText(Object... args) {
+        return Component.translatable(this.key, args);
     }
 }
