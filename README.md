@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://modrinth.com/mod/better-auto-clicker"><img src="https://img.shields.io/badge/Modrinth-Available-green?style=for-the-badge&logo=modrinth" alt="Modrinth Page"/></a>
+  <a href="https://modrinth.com/project/XANSrh5f"><img src="https://img.shields.io/badge/Modrinth-Available-green?style=for-the-badge&logo=modrinth" alt="Modrinth Page"/></a>
   <img src="https://img.shields.io/badge/Minecraft-1.21.3-blue?style=for-the-badge&logo=minecraft" alt="Minecraft Version"/>
   <img src="https://img.shields.io/badge/Loader-Fabric-lightgrey?style=for-the-badge" alt="Fabric Loader"/>
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk" alt="Java Version"/>
@@ -81,15 +81,3 @@
 
 > [!WARNING]
 > Make sure to toggle the autoclicker on (default key: **`I`**) for automated features (like Auto-Bridge, Auto-Eat, and Auto-Heal) to function.
-
----
-
-## 🛠️ Building From Source
-
-If you want to build this mod yourself:
-1. Clone the repository: `git clone https://github.com/itssxnu/Auto-Clicker-Minecraft.git`
-2. Run the Gradle build:
-   ```powershell
-   ./gradlew build
-   ```
-3. Find your built jar file in `build/libs/`.
