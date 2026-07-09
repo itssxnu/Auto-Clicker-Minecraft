@@ -53,20 +53,20 @@
 <summary><b>Click to expand combat filter previews</b></summary>
 
 #### All Mobs Mode
-![All Mobs Mode](./assests/AllMobMode-ezgif.com-optimize.gif?v=1)
+<img width="800" height="450" alt="Image" src="https://github.com/user-attachments/assets/fc1c0c12-157f-4f39-910c-d0f721b91a4c" />
 
 #### Hostiles Only Mode
-![Hostiles Only Mode](./assests/HostileOnlyMode-ezgif.com-optimize.gif?v=1)
+<img width="800" height="450" alt="Image" src="https://github.com/user-attachments/assets/269efb32-39b8-4e46-a72f-64d23bd8baac" />
 
 #### Passives Only Mode
-![Passives Only Mode](./assests/PassiveOnlyMode-ezgif.com-optimize.gif?v=1)
+<img width="800" height="450" alt="Image" src="https://github.com/user-attachments/assets/a2c3733b-0135-4b5c-aea9-b8d8171f10ba" />
 
 #### Hostiles & Passives Mode
-![Hostiles & Passives Mode](./assests/HostilePassiveOnlyMode-ezgif.com-optimize.gif?v=1)
+<img width="800" height="450" alt="Image" src="https://github.com/user-attachments/assets/380abf90-ae31-4947-af9c-015ddcce0018" />
 </details>
 
 ### Auto-Bridging Demo
-![Auto-Bridging Preview](./assests/autoBridge-ezgif.com-optimize.gif?v=1)
+<img width="800" height="450" alt="Image" src="https://github.com/user-attachments/assets/2eb8a887-e184-4540-abe1-486d1183d4c1" />
 
 ### Auto-Eating & Auto-Healing Demos
 <p align="center">
