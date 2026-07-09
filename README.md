@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://modrinth.com/mod/auto-clicker-by-its_sxnu">
-    <img src="./assests/BETTER-AUTO-CLICKER-7-8-2026.png?v=1" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
+    <img src="https://github.com/user-attachments/assets/f84f830f-3ef4-454a-a241-b6be5ccee9ab" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
   </a>
 </p>
 
@@ -70,8 +70,8 @@
 
 ### Auto-Eating & Auto-Healing Demos
 <p align="center">
-  <img src="./assests/autoEat-ezgif.com-optimize.gif?v=1" width="48%" style="margin-right: 2%;"/>
-  <img src="./assests/autoHeal-ezgif.com-optimize.gif?v=1" width="48%"/>
+  <img src="https://github.com/user-attachments/assets/73d08628-0c11-4990-a200-e614a9ddda02" width="48%" style="margin-right: 2%;"/>
+  <img src="https://github.com/user-attachments/assets/7cb420a8-0d47-44ba-a50a-2dc7d6a4f926" width="48%"/>
 </p>
 
 ---
