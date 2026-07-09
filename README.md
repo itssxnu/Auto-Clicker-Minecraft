@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://modrinth.com/mod/auto-clicker-by-its_sxnu">
-    <img src="https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/BETTER-AUTO-CLICKER-7-8-2026.png" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
+    <img src="assests/BETTER-AUTO-CLICKER-7-8-2026.png" alt="Better Auto Clicker Logo" width="550" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);"/>
   </a>
 </p>
 
@@ -53,25 +53,25 @@
 <summary><b>Click to expand combat filter previews</b></summary>
 
 #### All Mobs Mode
-![All Mobs Mode](https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/AllMobMode-ezgif.com-optimize.gif)
+![All Mobs Mode](assests/AllMobMode-ezgif.com-optimize.gif)
 
 #### Hostiles Only Mode
-![Hostiles Only Mode](https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/HostileOnlyMode-ezgif.com-optimize.gif)
+![Hostiles Only Mode](assests/HostileOnlyMode-ezgif.com-optimize.gif)
 
 #### Passives Only Mode
-![Passives Only Mode](https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/PassiveOnlyMode-ezgif.com-optimize.gif)
+![Passives Only Mode](assests/PassiveOnlyMode-ezgif.com-optimize.gif)
 
 #### Hostiles & Passives Mode
-![Hostiles & Passives Mode](https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/HostilePassiveOnlyMode-ezgif.com-optimize.gif)
+![Hostiles & Passives Mode](assests/HostilePassiveOnlyMode-ezgif.com-optimize.gif)
 </details>
 
 ### Auto-Bridging Demo
-![Auto-Bridging Preview](https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/autoBridge-ezgif.com-optimize.gif)
+![Auto-Bridging Preview](assests/autoBridge-ezgif.com-optimize.gif)
 
 ### Auto-Eating & Auto-Healing Demos
 <p align="center">
-  <img src="https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/autoEat-ezgif.com-optimize.gif" width="48%" style="margin-right: 2%;"/>
-  <img src="https://raw.githubusercontent.com/itssxnu/Auto-Clicker-Minecraft/master/assests/autoHeal-ezgif.com-optimize.gif" width="48%"/>
+  <img src="assests/autoEat-ezgif.com-optimize.gif" width="48%" style="margin-right: 2%;"/>
+  <img src="assests/autoHeal-ezgif.com-optimize.gif" width="48%"/>
 </p>
 
 ---
