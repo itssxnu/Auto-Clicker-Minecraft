@@ -13,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -33,9 +34,9 @@ public class AutoClicker {
     public static final String MOD_ID = "autoclicker";
     public static final Logger LOGGER = LogManager.getLogger(MOD_ID);
     public static final KeyBinding openConfig =
-            new KeyBinding("keybinding.open-gui", GLFW.GLFW_KEY_O, "category.autoclicker-fabric");
+            new KeyBinding("keybinding.open-gui", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_O, "category.autoclicker-fabric");
     public static final KeyBinding toggleHolding =
-            new KeyBinding("keybinding.toggle-hold", GLFW.GLFW_KEY_I, "category.autoclicker-fabric");
+            new KeyBinding("keybinding.toggle-hold", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.autoclicker-fabric");
     private static final Path CONFIG_DIR = Paths.get(MinecraftClient.getInstance().runDirectory.getPath() + "/config");
     private static final Path CONFIG_FILE = Paths.get(CONFIG_DIR + "/auto-clicker-fabric.json");
     public static Holding.AttackHolding leftHolding;
